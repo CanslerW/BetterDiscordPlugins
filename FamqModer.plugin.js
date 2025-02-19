@@ -1,11 +1,12 @@
 /**
  * @name FamqPoster
- * @version 1.0.0
+ * @version 1.0.1
  * @description Залупа для модера
  * @license MIT
  * @author canslerw
  * @authorId 336032579142549504
- * @source https://raw.githubusercontent.com/CRAWNiiK/CommandCenter/refs/heads/main/CommandCenter.plugin.js
+ * @website https://github.com/CanslerW/BetterDiscord_plugins/tree/main
+ * @source https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/refs/heads/main/FamqModer.plugin.js
  */
 
 'use strict';
