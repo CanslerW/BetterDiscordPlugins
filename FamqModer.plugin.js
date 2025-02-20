@@ -1,9 +1,9 @@
 /**
  * @name FamqPoster
- * @version 0.0.5
+ * @version 0.0.2
  * @description Плагин который упростит жизнь модераторам
  * @author canslerw
- * @authorId 336032579142549504
+ * @authorId 989105816202256385
  * @website https://canslerw.github.io/
  * @source https://github.com/CanslerW/BetterDiscord_plugins/blob/main/FamqModer.plugin.js
  * @updateUrl https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/main/FamqModer.plugin.js
@@ -132,9 +132,9 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event.options.find(option => option.name === 'fam1')?.value;
-                        const fam2 = event.options.find(option => option.name === 'fam2')?.value;
-                        const zone = event.options.find(option => option.name === 'zone')?.value;
+                        const fam1 = event[0]?.value ?? '';
+                        const fam2 = event[2]?.value ?? '';
+                        const zone = event[1]?.value ?? '';
 
                         if (!fam1) {
                             this.logger.error('fam1 is missing');
@@ -199,9 +199,9 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event.options.find(option => option.name === 'fam1')?.value;
-                        const fam2 = event.options.find(option => option.name === 'fam2')?.value;
-                        const zone = event.options.find(option => option.name === 'zone')?.value;
+                        const fam1 = event[0]?.value ?? '';
+                        const fam2 = event[2]?.value ?? '';
+                        const zone = event[1]?.value ?? '';
 
                         if (!fam1) {
                             this.logger.error('fam1 is missing');
@@ -258,8 +258,8 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event.options.find(option => option.name === 'fam1')?.value;
-                        const number = event.options.find(option => option.name === 'number')?.value;
+                        const fam1 = event[0]?.value ?? '';
+                        const number = event[1]?.value ?? '';
 
                         if (!fam1) {
                             this.logger.error('fam1 is missing');
@@ -332,11 +332,11 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event.options.find(option => option.name === 'fam1')?.value;
-                        const gos = event.options.find(option => option.name === 'gos')?.value;
-                        const items = event.options.find(option => option.name === 'items')?.value;
-                        const ozer = event.options.find(option => option.name === 'ozer')?.value;
-                        const s_kem = event.options.find(option => option.name === 's_kem')?.value;
+                        const fam1 = event[0]?.value ?? '';
+                        const gos = event[1]?.value ?? '';
+                        const items = event[2]?.value ?? '';
+                        const ozer = event[3]?.value;
+                        const s_kem = event[4]?.value;
 
                         let message = s_kem && s_kem.trim().length > 0 
                         ? `_:f53acfca9925447dbdf8b02c7b31c88f: **${fam1}** совместно с **${s_kem}** перекрыла крафт **${gos}** на **${items}**`
