@@ -7,6 +7,7 @@
  * @authorId 336032579142549504
  * @website https://github.com/CanslerW/BetterDiscord_plugins/tree/main
  * @source https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/refs/heads/main/FamqModer.plugin.js
+ * @updateUrl https://raw.githubusercontent.com/CRAWNiiK/CommandCenter/refs/heads/main/CommandCenter.plugin.js
  */
 
 'use strict';
