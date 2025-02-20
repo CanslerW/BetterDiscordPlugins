@@ -1,12 +1,12 @@
 /**
  * @name FamqPoster
- * @version 1.0.0
+ * @version 0.0.5
  * @description Плагин который упростит жизнь модераторам
  * @author canslerw
  * @authorId 336032579142549504
  * @website https://canslerw.github.io/
- * @source https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/refs/heads/main/FamqModer.plugin.js
- * @updateUrl https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/refs/heads/main/FamqModer.plugin.js
+ * @source https://github.com/CanslerW/BetterDiscord_plugins/blob/main/FamqModer.plugin.js
+ * @updateUrl https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/main/FamqModer.plugin.js
  */
 
 'use strict';
