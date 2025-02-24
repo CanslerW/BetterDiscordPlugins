@@ -1,10 +1,10 @@
 /**
  * @name FamqPoster
- * @version 0.0.2
+ * @version 1.1.0
  * @description Плагин который упростит жизнь модераторам
  * @author canslerw
- * @authorId 989105816202256385
- * @website https://canslerw.github.io/
+ * @authorId 336032579142549504
+ * @website https://canslerw.github.io/BetterDiscord/index.html
  * @source https://github.com/CanslerW/BetterDiscord_plugins/blob/main/FamqModer.plugin.js
  * @updateUrl https://raw.githubusercontent.com/CanslerW/BetterDiscord_plugins/main/FamqModer.plugin.js
  */
@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS = {
     capt_def: true,
     bank_crime: true,
     postavka: true,
+    craft: true,
+    bank_gos: true,
 };
 
 class Utils {
@@ -48,7 +50,7 @@ class SettingsService extends BaseService {
     }
 }
 
-class ModulesService extends BaseService {
+class ModulesService extends BaseService { 
     start() {
         this.dispatcher = BdApi.Webpack.getModule(BdApi.Webpack.Filters.byKeys('dispatch', 'subscribe'));
 
@@ -88,9 +90,121 @@ class PatchesService extends BaseService {
     capt_def;
     bank_crime;
     postavka;
+    craft;
+    bank_gos;
 
     start(modulesService, settingsService) {
         const commands = [];
+        if (settingsService.settings.postavka) {
+            this.postavka = {
+                id: 'postavka',
+                untranslatedName: 'поставка',
+                displayName: 'поставка',
+                type: 1, // CHAT
+                inputType: 0, // BUILТ_IN
+                applicationId: '-1', // BUILТ_IN
+                untranslatedDescription: 'Перекрыта поставка',
+                displayDescription: 'Перекрыта поставка',
+                options: [
+                    {
+                        name: 'fam1',
+                        displayName: 'нападающий',
+                        description: 'Укажите фому которая перекрыла поставку',
+                        displayDescription: 'Укажите фому которая перекрыла поставку',
+                        required: true,
+                        type: 3, // STRING
+                        
+                    },
+                    {
+                        name: 'gos',
+                        displayName: 'гос. структура',
+                        description: 'Укажите чью поставку поставку',
+                        displayDescription: 'Укажите чью поставку поставку',
+                        required: true,
+                        type: 3, // STRING
+                    },
+                    {
+                        name: 'items',
+                        displayName: 'предметы',
+                        description: 'Укажите какие предметы были на поставке',
+                        displayDescription: 'Укажите какие предметы были на поставке',
+                        required: true,
+                        type: 3, // STRING
+                    },
+                    {
+                        name: 'ozer',
+                        displayName: 'кого_убили',
+                        description: 'Укажите какие фракции были убиты',
+                        displayDescription: 'Укажите какие фракции были убиты',
+                        required: false,
+                        type: 3, // STRING
+                    },
+                    {
+                        name: 's_kem',
+                        displayName: 'С_кем_напали',
+                        description: 'Укажите фракцию с кем напала основная фракция',
+                        displayDescription: 'Укажите фракцию с кем напала основная фракция',
+                        required: false,
+                        type: 3, // STRING
+                    },
+                ],
+                execute: async (event) => {
+                    try {
+                        const { sendMessage } = BdApi.findModuleByProps('sendMessage');
+                        const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
+                        const getValueById = (id) => {
+                            const option = this.postavka.options.find(option => option.name === id);
+                            if (option) {
+                                return event.find(e => e.name === id)?.value ?? '';
+                            }
+                            return '';
+                        };
+            
+                        const fam1 = getValueById('fam1');
+                        const gos = getValueById('gos');
+                        const items = getValueById('items');
+                        const ozer = getValueById('ozer');
+                        const s_kem = getValueById('s_kem');
+
+                        const verbCover = (s_kem && s_kem.trim().length > 0) ? "перекрыли" : "перекрыла";
+                        const verbKill = (s_kem && s_kem.trim().length > 0) ? "убили" : "убила";
+                    
+                        let message = `_<:f53acfca9925447dbdf8b02c7b31c88f:1057690801720803440> **${fam1}**`;
+                    
+                        if (s_kem && s_kem.trim().length > 0) {
+                            message += ` совместно с **${s_kem}** ${verbCover} поставку **${gos}** на **${items}**_`;
+                        } else {
+                            message += ` ${verbCover} поставку **${gos}** на **${items}**_`;
+                        }
+                    
+                        if (ozer && ozer.trim().length > 0) {
+                            if (s_kem && s_kem.trim().length > 0) {
+                                message += `\n\n_*в процессе нападения **${fam1}** совместно с **${s_kem}** также ${verbKill} **${ozer}**_`;
+                            } else {
+                                message += `\n\n_*в процессе нападения **${fam1}** также ${verbKill} **${ozer}**_`;
+                            }
+                        }
+                        
+                        sendMessage(channelId, { content: message }).then(() => {
+                            BdApi.UI.showNotice("Сообщение успешно отправлено!", {
+                                type: "success",
+                                timeout: 3000,
+                                buttons: [
+                                    {
+                                        label: "OK",
+                                        onClick: (close) => close()
+                                    }
+                                ]
+                            });
+                        });
+
+                    } catch (error) {
+                        this.logger.error('Error executing postavka command:', error);
+                    }
+                }
+            };
+            commands.push(this.postavka);
+        }
 
         if (settingsService.settings.capt_win) {
             this.capt_win = {
@@ -132,24 +246,29 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event[0]?.value ?? '';
-                        const fam2 = event[2]?.value ?? '';
-                        const zone = event[1]?.value ?? '';
+                        const getValueById = (id) => {
+                            const option = this.capt_win.options.find(option => option.name === id);
+                            if (option) {
+                                return event.find(e => e.name === id)?.value ?? '';
+                            }
+                            return '';
+                        };
+                        const fam1 = getValueById('fam1');
+                        const fam2 = getValueById('fam2');
+                        const zone = getValueById('zone');
 
-                        if (!fam1) {
-                            this.logger.error('fam1 is missing');
-                            return;
-                        }
-                        if (!fam2) {
-                            this.logger.error('fam2 is missing');
-                            return;
-                        }
-                        if (!zone) {
-                            this.logger.error('zone is missing');
-                            return;
-                        }
-
-                        sendMessage(channelId, { content: `_<:20d771138449479eb29cecc8d114d997:1132269508837507133> **${fam1}** выиграла квадрат **${zone}** у **${fam2}**_` });
+                        sendMessage(channelId, { content: `_<<:20d771138449479eb29cecc8d114d997:1132269508837507133> **${fam1}** выиграла квадрат **${zone}** у **${fam2}**_` }).then(() => {
+                            BdApi.UI.showNotice("Сообщение успешно отправлено!", {
+                                type: "success",
+                                timeout: 3000,
+                                buttons: [
+                                    {
+                                        label: "OK",
+                                        onClick: (close) => close()
+                                    }
+                                ]
+                            });
+                        })    
 
                     } catch (error) {
                         this.logger.error('Error executing capt_win command:', error);
@@ -199,24 +318,30 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event[0]?.value ?? '';
-                        const fam2 = event[2]?.value ?? '';
-                        const zone = event[1]?.value ?? '';
+                        const getValueById = (id) => {
+                            const option = this.capt_def.options.find(option => option.name === id);
+                            if (option) {
+                                return event.find(e => e.name === id)?.value ?? '';
+                            }
+                            return '';
+                        };
+            
+                        const fam1 = getValueById('fam1');
+                        const fam2 = getValueById('fam2');
+                        const zone = getValueById('zone');
 
-                        if (!fam1) {
-                            this.logger.error('fam1 is missing');
-                            return;
-                        }
-                        if (!fam2) {
-                            this.logger.error('fam2 is missing');
-                            return;
-                        }
-                        if (!zone) {
-                            this.logger.error('zone is missing');
-                            return;
-                        }
-
-                        sendMessage(channelId, { content: `_<:11b7b73fc4004fcfa3b49806916cce41:1132269516135604264> **${fam1}** защитила квадрат **${zone}** от **${fam2}**_` });
+                        sendMessage(channelId, { content: `_<:11b7b73fc4004fcfa3b49806916cce41:1132269516135604264> **${fam1}** защитила квадрат **${zone}** от **${fam2}**_` })    .then(() => {
+                            BdApi.UI.showNotice("Сообщение успешно отправлено!", {
+                                type: "success",
+                                timeout: 3000,
+                                buttons: [
+                                    {
+                                        label: "OK",
+                                        onClick: (close) => close()
+                                    }
+                                ]
+                            });
+                        })
 
                     } catch (error) {
                         this.logger.error('Error executing capt_def command:', error);
@@ -253,21 +378,48 @@ class PatchesService extends BaseService {
                         required: true,
                         type: 3, // STRING
                     },
+                    {
+                        name: 'fam2',
+                        displayName: 'доп_фама',
+                        description: 'Укажите фому которая ограбила банк',
+                        displayDescription: 'Укажите фому которая ограбила банк',
+                        required: false,
+                        type: 3, // STRING
+                    },
                 ],
                 execute: async (event) => {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event[0]?.value ?? '';
-                        const number = event[1]?.value ?? '';
-
-                        if (!fam1) {
-                            this.logger.error('fam1 is missing');
-                            return;
+                        const getValueById = (id) => {
+                            const option = this.bank_crime.options.find(option => option.name === id);
+                            if (option) {
+                                return event.find(e => e.name === id)?.value ?? '';
+                            }
+                            return '';
+                        };
+            
+                        const fam1 = getValueById('fam1');
+                        const number = getValueById('number');
+                        const fam2 = getValueById('fam2');
+                        let message = `<:mac3:1057686428978524190> _`;
+                        if(fam2) {
+                            message += `${fam1} совместно с **${fam2}** успешно ограбили **БАНК #${number}** _`;
+                        } else {
+                            message += `${fam1} успешно ограбила **БАНК #${number}** _`;
                         }
-
-                        sendMessage(channelId, { content: `<:mac3:1057686428978524190> _${fam1} успешно ограбила **БАНК #${number}** _` });
-
+                        sendMessage(channelId, { content: message })    .then(() => {
+                            BdApi.UI.showNotice("Сообщение успешно отправлено!", {
+                                type: "success",
+                                timeout: 3000,
+                                buttons: [
+                                    {
+                                        label: "OK",
+                                        onClick: (close) => close()
+                                    }
+                                ]
+                            });
+                        })
                     } catch (error) {
                         this.logger.error('Error executing bank_crime command:', error);
                     }
@@ -275,39 +427,142 @@ class PatchesService extends BaseService {
             };
             commands.push(this.bank_crime);
         }
-
-        if (settingsService.settings.postavka) {
-            this.postavka = {
-                id: 'postavka',
-                untranslatedName: 'поставка',
-                displayName: 'поставка',
+        if (settingsService.settings.bank_gos) {
+            this.bank_gos = {
+                id: 'bank_gos',
+                untranslatedName: 'банк_отбили',
+                displayName: 'банк_отбили',
                 type: 1, // CHAT
                 inputType: 0, // BUILТ_IN
                 applicationId: '-1', // BUILТ_IN
-                untranslatedDescription: 'Перекрыта поставка',
-                displayDescription: 'Перекрыта поставка',
+                untranslatedDescription: 'Успешно отбили ограбление банка',
+                displayDescription: 'Успешно отбили ограбление банка',
                 options: [
                     {
-                        name: 'fam1',
-                        displayName: 'нападающий',
-                        description: 'Укажите фому которая перекрыла поставку',
-                        displayDescription: 'Укажите фому которая перекрыла поставку',
+                        name: 'gos',
+                        displayName: 'Кто_отбил',
+                        description: 'Укажите гос. структуру которая отбила банк',
+                        displayDescription: 'Укажите гос. структуру которая отбила банк',
                         required: true,
                         type: 3, // STRING
                     },
                     {
+                        name: 'crime',
+                        displayName: 'кто_напал',
+                        description: 'Укажите фому которая ограбила банк',
+                        displayDescription: 'Укажите фому которая ограбила банк',
+                        required: true,
+                        type: 3, // STRING
+                    },
+                    {
+                        name: 'number',
+                        displayName: 'номер',
+                        description: 'Укажите номер банка который ограбили',
+                        displayDescription: 'Укажите номер банка который ограбили',
+                        required: true,
+                        type: 3, // STRING
+                    },
+                    {
+                        name: 'dop_gos',
+                        displayName: 'кто_еще_был_гос',
+                        description: 'Укажите какие еще гос. структуры были.',
+                        displayDescription: 'Укажите какие еще гос. структуры были.',
+                        required: false,
+                        type: 3, // STRING
+                    },
+                    {
+                        name: 'dop_crime',
+                        displayName: 'кто_еще_был_крайм',
+                        description: 'Укажите какие еще из крайма был.',
+                        displayDescription: 'Укажите какие еще из крайма был.',
+                        required: false,
+                        type: 3, // STRING
+                    },
+                ],
+                execute: async (event) => {
+                    try {
+                        const { sendMessage } = BdApi.findModuleByProps('sendMessage');
+                        const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
+                        const getValueById = (id) => {
+                            const option = this.bank_gos.options.find(option => option.name === id);
+                            if (option) {
+                                return event.find(e => e.name === id)?.value ?? '';
+                            }
+                            return '';
+                        };
+            
+                        const gos = getValueById('gos');
+                        const crime = getValueById('crime');
+                        const number = getValueById('number');
+                        const dop_gos = getValueById('dop_gos');
+                        const dopcrime = getValueById('dop_crime');
+
+            let message = `<:mac3:1057686428978524190> _**${gos}**`;
+            if (!dop_gos && !dopcrime) {
+                message += ` успешно отбили ограбление **БАНКА #${number}** от **${crime}**_`;
+            }
+            else if (dop_gos && !dopcrime) {
+                message += ` 2совместно с **${dop_gos}** успешно отбили ограбление **БАНКА #${number}** от **${crime}**_`;
+            }
+            else if (!dop_gos && dopcrime) {
+                message += ` успешно отбили ограбление **БАНКА #${number}** от **${crime}** совместно с **${dopcrime}**_`;
+            }
+            else if (dop_gos && dopcrime) {
+                message += ` совместно с **${dop_gos}** успешно отбили ограбление **БАНКА #${number}** от **${crime}** совместно с **${dopcrime}**_`;
+            }
+            
+            sendMessage(channelId, { content: message }).then(() => {
+                BdApi.UI.showNotice("Сообщение успешно отправлено!", {
+                    type: "success",
+                    timeout: 3000,
+                    buttons: [
+                        {
+                            label: "OK",
+                            onClick: (close) => close()
+                        }
+                    ]
+                });
+            })
+                    } catch (error) {
+                        this.logger.error('Error executing bank_gos command:', error);
+                    }
+                }
+            };
+            commands.push(this.bank_gos);
+        }
+        if (settingsService.settings.craft) {
+            this.craft = {
+                id: 'craft',
+                untranslatedName: 'крафт',
+                displayName: 'крафт',
+                type: 1, // CHAT
+                inputType: 0, // BUILТ_IN
+                applicationId: '-1', // BUILТ_IN
+                untranslatedDescription: 'Перекрыт крафт',
+                displayDescription: 'Перекрыт крафт',
+                options: [
+                    {
+                        name: 'fam1',
+                        displayName: 'нападающий',
+                        description: 'Укажите фому которая перекрыла крафт',
+                        displayDescription: 'Укажите фому которая перекрыла крафт',
+                        required: true,
+                        type: 3, // STRING
+                        
+                    },
+                    {
                         name: 'gos',
                         displayName: 'гос. структура',
-                        description: 'Укажите чью поставку перекрыли',
-                        displayDescription: 'Укажите чью поставку перекрыли',
+                        description: 'Укажите чью поставку крафт',
+                        displayDescription: 'Укажите чью поставку крафт',
                         required: true,
                         type: 3, // STRING
                     },
                     {
                         name: 'items',
                         displayName: 'предметы',
-                        description: 'Укажите какие что было на поставке',
-                        displayDescription: 'Укажите какие что было на поставке',
+                        description: 'Укажите какие предметы были на крафте',
+                        displayDescription: 'Укажите какие предметы были на крафте',
                         required: true,
                         type: 3, // STRING
                     },
@@ -322,8 +577,8 @@ class PatchesService extends BaseService {
                     {
                         name: 's_kem',
                         displayName: 'С_кем_напали',
-                        description: 'Укажите фракцию с кем напала основая фракция',
-                        displayDescription: 'Укажите фракцию с кем напала основая фракция',
+                        description: 'Укажите фракцию с кем напала основная фракция',
+                        displayDescription: 'Укажите фракцию с кем напала основная фракция',
                         required: false,
                         type: 3, // STRING
                     },
@@ -332,28 +587,58 @@ class PatchesService extends BaseService {
                     try {
                         const { sendMessage } = BdApi.findModuleByProps('sendMessage');
                         const channelId = event.channelId || modulesService.channelModule.getCurrentlySelectedChannelId();
-                        const fam1 = event[0]?.value ?? '';
-                        const gos = event[1]?.value ?? '';
-                        const items = event[2]?.value ?? '';
-                        const ozer = event[3]?.value;
-                        const s_kem = event[4]?.value;
+                        const getValueById = (id) => {
+                            const option = this.craft.options.find(option => option.name === id);
+                            if (option) {
+                                return event.find(e => e.name === id)?.value ?? '';
+                            }
+                            return '';
+                        };
+            
+                        const fam1 = getValueById('fam1');
+                        const gos = getValueById('gos');
+                        const items = getValueById('items');
+                        const ozer = getValueById('ozer');
+                        const s_kem = getValueById('s_kem');
 
-                        let message = s_kem && s_kem.trim().length > 0 
-                        ? `_:f53acfca9925447dbdf8b02c7b31c88f: **${fam1}** совместно с **${s_kem}** перекрыла крафт **${gos}** на **${items}**`
-                        : `_:f53acfca9925447dbdf8b02c7b31c88f: **${fam1}** перекрыла крафт **${gos}** на **${items}**`;
+                        const verbCover = (s_kem && s_kem.trim().length > 0) ? "перекрыли" : "перекрыла";
+                        const verbKill = (s_kem && s_kem.trim().length > 0) ? "убили" : "убила";
                     
-                    if (ozer && ozer.trim().length > 0) {
-                        message += `\n\n_в процессе нападения **${fam1}** также убила **${ozer}**_`;
-                    }
+                        let message = `_<:f53acfca9925447dbdf8b02c7b31c88f:1057690801720803440> **${fam1}**`;
+                    
+                        if (s_kem && s_kem.trim().length > 0) {
+                            message += ` совместно с **${s_kem}** ${verbCover} крафт **${gos}** на **${items}**_`;
+                        } else {
+                            message += ` ${verbCover} крафт **${gos}** на **${items}**_`;
+                        }
+                    
+                        if (ozer && ozer.trim().length > 0) {
+                            if (s_kem && s_kem.trim().length > 0) {
+                                message += `\n\n_*в процессе нападения **${fam1}** совместно с **${s_kem}** также ${verbKill} **${ozer}**_`;
+                            } else {
+                                message += `\n\n_*в процессе нападения **${fam1}** также ${verbKill} **${ozer}**_`;
+                            }
+                        }
                         
-                        sendMessage(channelId, { content: message });
+                        sendMessage(channelId, { content: message }).then(() => {
+                            BdApi.UI.showNotice("Сообщение успешно отправлено!", {
+                                type: "success",
+                                timeout: 3000,
+                                buttons: [
+                                    {
+                                        label: "OK",
+                                        onClick: (close) => close()
+                                    }
+                                ]
+                            });
+                        })
 
                     } catch (error) {
                         this.logger.error('Error executing postavka command:', error);
                     }
                 }
             };
-            commands.push(this.postavka);
+            commands.push(this.craft);
         }
 
         if (modulesService.commandsModuleKey) {
@@ -363,7 +648,7 @@ class PatchesService extends BaseService {
         } else {
             this.logger.error('commandsModuleKey не найдено!');
         }
-
+        
         return Promise.resolve();
     }
 
@@ -441,7 +726,9 @@ class FamqPoster {
             capt_win: "/капт_выиграли",
             capt_def: "/капт_защитили",
             bank_crime: "/банк_ограбили",
-            postavka: "/поставка"
+            bank_gos: "/банк_отбили",
+            postavka: "/поставка",
+            craft: "/крафт"
         };
     
         Object.keys(commands).forEach((commandKey) => {
@@ -511,8 +798,63 @@ class FamqPoster {
             panel.appendChild(container);
         });
     
+        // КНОПКА "ПОКАЗАТЬ ИЗМЕНЕНИЯ"
+        const changelogButton = document.createElement("button");
+        changelogButton.innerText = "Показать изменения";
+        changelogButton.style.padding = "10px";
+        changelogButton.style.backgroundColor = "#7289DA";
+        changelogButton.style.color = "#fff";
+        changelogButton.style.border = "none";
+        changelogButton.style.borderRadius = "5px";
+        changelogButton.style.cursor = "pointer";
+        changelogButton.style.textAlign = "center";
+        changelogButton.style.marginTop = "10px";
+        changelogButton.style.fontSize = "14px";
+        changelogButton.style.transition = "background 0.3s";
+        
+        changelogButton.addEventListener("mouseover", () => {
+            changelogButton.style.backgroundColor = "#5b6eae";
+        });
+    
+        changelogButton.addEventListener("mouseout", () => {
+            changelogButton.style.backgroundColor = "#7289DA";
+        });
+    
+        changelogButton.addEventListener("click", () => {
+            BdApi.UI.showChangelogModal({
+                title: "FamqPoster",
+                subtitle: `version ${this.meta.version}`,
+                blurb: "Обновление плагина для модераторов!",
+                changes: [
+                    {
+                        title: "Новые возможности",
+                        type: "added",
+                        blurb: "Что нового в этом обновлении?",
+                        items: [
+                            "Добавлена возможность смотреть изменения в файле!",
+                            "Исправлена логика команд.",
+                            "Добавлено уведомление после отправки команды."
+                        ]
+                    },
+                    {
+                        title: "Исправления",
+                        type: "fixed",
+                        items: [
+                            "Исправлена ошибка сохранения настроек.",
+                            "Исправлены ошибка когда не отображались эмодзи.",
+                            "Исправлены текста..",
+                            "Улучшена стабильность работы."
+                        ]
+                    }
+                ]
+            });
+        });
+    
+        panel.appendChild(changelogButton);
+    
         return panel;
     }
+    
 
     updateCommands() {
         if (this.patchesService) {
