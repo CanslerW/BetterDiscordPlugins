@@ -1,7 +1,7 @@
 /**
  * @name FamqPoster
  * @version 1.1.0
- * @description Плагин который упростит жизнь модераторам
+ * @description Plugin for moderation.
  * @author canslerw
  * @authorId 336032579142549504
  * @website https://canslerw.github.io/BetterDiscord/index.html
